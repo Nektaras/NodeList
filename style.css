@@ -1,0 +1,38 @@
+#mainList {
+    margin-bottom: 30px;
+    float: right;
+}
+
+table {
+   font-size: 20px;
+}
+
+th {
+    background-color: grey;
+    color: #fff;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 5px 10px;
+}
+
+table button {
+    width: 80px;
+}
+
+.createNoteButton {
+    float: right;
+    margin-bottom: 60px;
+}
+
+#secondaryList {
+    clear: both;
+    margin: 0 auto 30px;
+
+}
+
+#archiveList {
+    display: none;
+    margin-left: 100px;
+}
