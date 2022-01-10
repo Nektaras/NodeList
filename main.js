@@ -43,11 +43,11 @@ class NoteView {
         while (this.mainList.childNodes.length > 2) {
             this.mainList.removeChild(this.mainList.lastChild);
         }
+
         array.forEach(note => {
             const row = document.createElement("tr");
             const actions = document.createElement("td");
             let [name, created, category, content, dates] = this.renderNote(note);
-
 
             const editButton = document.createElement("button");
             editButton.className = "editButton";
@@ -71,6 +71,7 @@ class NoteView {
         while (this.secondList.childNodes.length > 2) {
             this.secondList.removeChild(this.secondList.lastChild);
         }
+
         array.forEach(category => {
             const row = document.createElement("tr");
             const name = document.createElement("td");
@@ -93,11 +94,11 @@ class NoteView {
         while (this.archiveList.childNodes.length > 2) {
             this.archiveList.removeChild(this.archiveList.lastChild);
         }
+
         array.forEach(note => {
             const row = document.createElement("tr");
             const actions = document.createElement("td");
             let [name, created, category, content, dates] = this.renderNote(note);
-
 
             const editButton = document.createElement("button");
             editButton.className = "editButton";
@@ -220,8 +221,9 @@ class NoteController {
         this.showEditRow = this.showEditRow.bind(this);
         this.editNote = this.editNote.bind(this);
         this.oldName;
-        //this.archiveNote = this.archiveNote.bind(this);
-        //this.deleteNote = this.deleteNote.bind(this);
+        this.archiveNote = this.archiveNote.bind(this);
+        this.deleteNote = this.deleteNote.bind(this);
+        this.unarchiveNote = this.unarchiveNote.bind(this);
     }
 
     addHandle() {
@@ -269,10 +271,9 @@ class NoteController {
     showEditRow(e) {
         if (e.target.className !== "editButton") return;
         this.oldName = e.target.parentElement.parentElement.childNodes[0].innerText;
-        console.log(this.oldName);
         this.view.showEditRow(e.target.parentElement.parentElement.parentElement, e.target.parentElement.parentElement.childNodes);
         const editButton = document.querySelector(".editNote");
-        editButton.addEventListener("click", this.editNote);        
+        editButton.addEventListener("click", this.editNote);
     }
 
     editNote() {
@@ -285,13 +286,27 @@ class NoteController {
         this.view.archiveList.style.display = "none";
     }
 
-    deleteTask(e) {
+    deleteNote(e) {
         if (e.target.className !== "deleteButton") return;
-        let name = e.target.parentElement.childNodes[0].textContent;
-        this.model.deleteTask(name);
-        this.removeHandle();
+        let name = e.target.parentElement.parentElement.childNodes[0].innerText;
+        this.model.deleteNote(name);
         this.renderNotes();
-        this.addHandle();
+        this.view.archiveList.style.display = "none";
+    }
+
+    archiveNote(e) {
+        if (e.target.className !== "archiveButton") return;
+        let name = e.target.parentElement.parentElement.childNodes[0].innerText;
+        this.model.archiveNote(name);
+        this.renderNotes();
+    }
+
+    unarchiveNote(e) {
+        if (e.target.className !== "unarchiveButton") return;
+        let name = e.target.parentElement.parentElement.childNodes[0].innerText;
+        this.model.unarchiveNote(name);
+        this.renderNotes();
+        this.view.archiveList.style.display = "none";
     }
 }
 
@@ -331,14 +346,13 @@ class NoteModel {
         this.notes.push(newNote);
     }
 
-    editNote (oldName, newName, content, category) {     
+    editNote(oldName, newName, content, category) {
         let obj = this.notes.find(note => note.name === newName);
         if (obj) {
             alert("You already have one with this name. Change it");
             return;
         }
         obj = this.notes.find(note => note.name === oldName);
-        console.log(obj, oldName, newName);
         obj.name = newName;
         obj.content = content;
         obj.category = category;
@@ -349,18 +363,19 @@ class NoteModel {
         obj.created = date;
     }
 
-    deleteTask(name) {
-        let index = this.notes.indexOf(name);
-        this.notes.splice(index, 1);
-        const jsonTasks = JSON.stringify(this.notes);
-        localStorage.setItem("myTasks", jsonTasks);
+    deleteNote(name) {
+        let arr = this.notes.filter(note => note.name !== name);
+        this.notes = arr;
     }
 
-    editTask(oldName, newName) {
-        let index = this.notes.indexOf(oldName);
-        this.notes[index] = newName;
-        const jsonTasks = JSON.stringify(this.notes);
-        localStorage.setItem("myTasks", jsonTasks);
+    archiveNote(name) {
+        let obj = this.notes.find(note => note.name === name);
+        obj.isArchived = true;
+    }
+
+    unarchiveNote(name) {
+        let obj = this.notes.find(note => note.name === name);
+        obj.isArchived = false;
     }
 
     getFirstData() {
@@ -388,6 +403,6 @@ class NoteModel {
     getArchiveData(e) {
         let category = e.target.parentElement.firstElementChild.innerText;
         let array = this.notes.filter(note => note.category === category && note.isArchived === true);
-        return array;
+        if (array.length > 0) return array;
     }
 }

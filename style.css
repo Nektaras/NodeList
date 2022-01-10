@@ -1,6 +1,7 @@
 #mainList {
-    margin-bottom: 30px;
-    float: right;
+    max-width: 1900px;
+    width: 100%;
+    margin: 0 auto 30px;
 }
 
 table {
@@ -22,17 +23,17 @@ table button {
 }
 
 .createNoteButton {
-    float: right;
     margin-bottom: 60px;
+    position: absolute;
+    right: 200px;
 }
 
 #secondaryList {
-    clear: both;
     margin: 0 auto 30px;
-
 }
 
 #archiveList {
     display: none;
-    margin-left: 100px;
+    max-width: fit-content;
+    margin: 0 auto 30px;
 }
