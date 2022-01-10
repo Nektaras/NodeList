@@ -160,6 +160,54 @@ class NoteView {
         row.append(name, created, category, content, dates, actions);
         this.mainList.appendChild(row);
     }
+
+    showEditRow(table, oldContent) {
+        const row = document.createElement("tr");
+        const name = document.createElement("td");
+        const created = document.createElement("td");
+        const category = document.createElement("td");
+        const content = document.createElement("td");
+        const dates = document.createElement("td");
+        const actions = document.createElement("td");
+
+        created.innerText = oldContent[1].innerText;
+        dates.innerText = oldContent[4].innerText;
+
+        const inputName = document.createElement("input");
+        inputName.className = "editName";
+        inputName.value = oldContent[0].innerText;
+        name.appendChild(inputName);
+
+        const inputContent = document.createElement("input");
+        inputContent.className = "editContent";
+        inputContent.value = oldContent[3].innerText;
+        content.appendChild(inputContent);
+        inputContent.style.width = "100%";
+
+        const selectCategory = document.createElement("select");
+        selectCategory.className = "editCategory";
+        let opt1 = document.createElement("option");
+        let opt2 = document.createElement("option");
+        let opt3 = document.createElement("option");
+        opt1.text = "Task";
+        opt2.text = "Random Thought";
+        opt3.text = "Idea";
+        if (oldContent[2].innerText === "Task") opt1.selected = true;
+        else if (oldContent[2].innerText === "Random Thought") opt2.selected = true;
+        else opt3.selected = true;
+        selectCategory.add(opt1, null);
+        selectCategory.add(opt2, null);
+        selectCategory.add(opt3, null);
+        category.appendChild(selectCategory);
+
+        const editButton = document.createElement("button");
+        editButton.className = "editNote";
+        editButton.appendChild(document.createTextNode("EDIT"));
+
+        actions.append(editButton);
+        row.append(name, created, category, content, dates, actions);
+        table.appendChild(row);
+    }
 }
 
 class NoteController {
@@ -169,17 +217,19 @@ class NoteController {
         this.showArchive = this.showArchive.bind(this);
         this.showAddRow = this.showAddRow.bind(this);
         this.addNote = this.addNote.bind(this);
-        //this.editNote = this.editNote.bind(this);
+        this.showEditRow = this.showEditRow.bind(this);
+        this.editNote = this.editNote.bind(this);
+        this.oldName;
         //this.archiveNote = this.archiveNote.bind(this);
         //this.deleteNote = this.deleteNote.bind(this);
     }
 
     addHandle() {
         this.view.addButton.addEventListener("click", this.showAddRow);
-        this.view.mainList.addEventListener("click", this.editNote);
+        this.view.mainList.addEventListener("click", this.showEditRow);
         this.view.mainList.addEventListener("click", this.archiveNote);
         this.view.mainList.addEventListener("click", this.deleteNote);
-        this.view.archiveList.addEventListener("click", this.editNote);
+        this.view.archiveList.addEventListener("click", this.showEditRow);
         this.view.archiveList.addEventListener("click", this.unarchiveNote);
         this.view.archiveList.addEventListener("click", this.deleteNote);
     }
@@ -216,14 +266,23 @@ class NoteController {
         this.renderNotes();
     }
 
-    editTask(e) {
+    showEditRow(e) {
         if (e.target.className !== "editButton") return;
-        let newName = prompt("Enter a new name for your task");
-        let oldName = e.target.parentElement.childNodes[0].textContent;
-        this.model.editTask(oldName, newName);
-        this.removeHandle();
+        this.oldName = e.target.parentElement.parentElement.childNodes[0].innerText;
+        console.log(this.oldName);
+        this.view.showEditRow(e.target.parentElement.parentElement.parentElement, e.target.parentElement.parentElement.childNodes);
+        const editButton = document.querySelector(".editNote");
+        editButton.addEventListener("click", this.editNote);        
+    }
+
+    editNote() {
+        let newName = document.querySelector(".editName").value;
+        let newContent = document.querySelector(".editContent").value;
+        let newCategory = document.querySelector(".editCategory").value;
+
+        if (newName && newContent) this.model.editNote(this.oldName, newName, newContent, newCategory);
         this.renderNotes();
-        this.addHandle();
+        this.view.archiveList.style.display = "none";
     }
 
     deleteTask(e) {
@@ -247,16 +306,21 @@ class NoteModel {
                 { name: "Books", created: "15/05/2021", category: "Task", content: "The Lean Startup", isArchived: false },
                 { name: "Hello, world", created: "01/09/2021", category: "Idea", content: "Learn JavaScript", isArchived: true },
                 { name: "New Year Celebration", created: "20/12/2021", category: "Random Thought", content: "Buy Christmas tree", isArchived: true },
-                { name: "New Year Celebration", created: "20/12/2021", category: "Random Thought", content: "Buy Christmas tree", isArchived: true }
+                { name: "New Year Celebration1", created: "20/12/2021", category: "Random Thought", content: "Buy Christmas tree", isArchived: true }
             ]
     }
 
     addNote(name, content, category) {
+        let obj = this.notes.find(note => name === note.name);
+        if (obj) {
+            alert("You already have one with this name. Change it");
+            return;
+        }
         let today = new Date();
         let day = today.getDate() < 10 ? "0" + today.getDate() : today.getDate();
-        let month = today.getMonth() < 9 ? "0" + (today.getMonth()+1) : today.getMonth()+1
+        let month = today.getMonth() < 9 ? "0" + (today.getMonth() + 1) : today.getMonth() + 1
         let date = `${day}/${(month)}/${today.getFullYear()}`;
-        let newNote = 
+        let newNote =
         {
             name: name,
             created: date,
@@ -265,6 +329,24 @@ class NoteModel {
             isArchived: false
         }
         this.notes.push(newNote);
+    }
+
+    editNote (oldName, newName, content, category) {     
+        let obj = this.notes.find(note => note.name === newName);
+        if (obj) {
+            alert("You already have one with this name. Change it");
+            return;
+        }
+        obj = this.notes.find(note => note.name === oldName);
+        console.log(obj, oldName, newName);
+        obj.name = newName;
+        obj.content = content;
+        obj.category = category;
+        let today = new Date();
+        let day = today.getDate() < 10 ? "0" + today.getDate() : today.getDate();
+        let month = today.getMonth() < 9 ? "0" + (today.getMonth() + 1) : today.getMonth() + 1
+        let date = `${day}/${(month)}/${today.getFullYear()}`;
+        obj.created = date;
     }
 
     deleteTask(name) {
