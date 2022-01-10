@@ -237,7 +237,7 @@ class NoteController {
     }
 
     renderNotes() {
-        if (this.model.notes) {
+        try {
             this.view.renderMainTable(this.model.getFirstData());
             this.view.renderSecondTable(this.model.getSecondData());
 
@@ -246,6 +246,9 @@ class NoteController {
             for (let i = 0; i < archive.length; i++) {
                 archive[i].addEventListener("click", this.showArchive);
             }
+        }
+        catch(e) {
+            console.log(e);
         }
     }
 
@@ -347,7 +350,7 @@ class NoteModel {
     }
 
     editNote(oldName, newName, content, category) {
-        let obj = this.notes.find(note => note.name === newName);
+        let obj = this.notes.find(note => note.name === newName && oldName !== newName);
         if (obj) {
             alert("You already have one with this name. Change it");
             return;
